@@ -1,0 +1,54 @@
+function main(workbook: ExcelScript.Workbook, process: string, value: string) {
+
+  return getProcess(workbook, process, value).toString();
+}
+
+// returns results from a called function
+function getProcess(workbook: ExcelScript.Workbook , process: string, value: string) {
+
+  let result = '';
+// search for process match and calls associated function on value
+  switch (true) {
+    case process === 'getEmail':
+        result = getEmail(workbook, value.trim()).toString().trim();
+
+    case process === 'getEmails':
+        result = getEmails(workbook, value).toString().trim();
+
+    case process === 'getItem':
+      result = getItem(value);
+  }
+  return result;
+}
+
+// returns email address stored in spreadsheet [Name, FN, LN, Email]
+function getEmail(workbook: ExcelScript.Workbook,name: string){
+    //filter table on name match
+  const [result] = workbook.getTable('Emails')
+    .getRangeBetweenHeaderAndTotal().getValues()
+    .filter(row => row[0].toString().trim().replace(/ /g, '').toLowerCase() === name.trim().replace(/ /g, '').toLowerCase());
+    //check for null/undefined
+    if(!result) return '';
+    // return email address strng, append semicolon
+    return `${result.splice(3, 1).toString().toLowerCase()}; `;
+}
+
+// return emails addresses stored in spreadsheet as a string
+function getEmails(workbook: ExcelScript.Workbook, names: string){
+    //gets emails from names using getEmail
+  const result = names.split(', ').map(name => {
+      const email = getEmail(workbook, name.trim());
+
+      if(!email) return '';
+
+      return email;
+    });
+  return result.join('').trim();
+}
+
+function getItem(item: string){
+  const target = Number(item.slice(0,item.indexOf(':')));
+  const result = item.slice(item.indexOf(':')+1);
+
+  return result.split(',')[target];
+}
